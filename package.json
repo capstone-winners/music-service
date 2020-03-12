@@ -1,0 +1,27 @@
+{
+  "name": "music-service",
+  "version": "1.0.0",
+  "description": "Music player service on AWS Greengrass",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/capstone-winners/music-service.git"
+  },
+  "author": "Nikhil Phatak",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/capstone-winners/music-service/issues"
+  },
+  "homepage": "https://github.com/capstone-winners/music-service#readme",
+  "dependencies": {
+    "aws-iot-device-sdk": "^2.2.3",
+    "lodash": "^4.17.15",
+    "qrcode": "^1.4.4"
+  },
+  "devDependencies": {
+    "prettier": "^1.19.1"
+  }
+}
