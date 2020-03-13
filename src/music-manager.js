@@ -26,9 +26,6 @@ class MusicManager {
       this.nSongs = songList.length;
       this.songDir = songsLoc;
 
-
-
-
       this.updateState();
 
       // Create the AWS IoT device and subscribe to it's topics
@@ -45,7 +42,7 @@ class MusicManager {
         this.device.subscribe("music");
       });
 
-      // bind the `handleAction` function to this `LiFxBulbManager` so that
+      // bind the `handleAction` function to this `MusicManager` so that
       // `this` is in the correct context when a message is received and the
       // `handleAction` function is called
       const bindedFunc = this.handleAction.bind(this);
@@ -58,48 +55,45 @@ class MusicManager {
   async updateState() {
     const newState = convertState(this.currentSong);
 
-    if (!_.isEqual(this.bulbState, newState)) {
+    if (!_.isEqual(this.musicState, newState)) {
       // the light bulb state has changed
       console.debug("State has changed");
-      this.bulbState = newState;
+      this.musicState = newState;
       // TODO: remove console.log once we can correctly pad the image. Instead
       // of logging this object, we will display it on the e-ink display.
-      generateQRCode(this.bulbState);
+      generateQRCode(this.musicState);
     }
   }
 
   async playSong(songName) {
+    var parsedIndex = parseInt(songName);
     if (this.songList.includes(songName)) {
       songToPlay = songName;
-    } else if {
-
+    } else if (parsedIndex != NaN && parsedIndex < this.nSongs) {
+      songToPlay = this.songList[parsedIndex];
     } else {
-
+      console.log(`Given song name or index: ${songName} is not valid`);
     }
     tmpProc = spawn('omxplayer', [pathJoin([songDir, songToPlay], '/')]);
-    this.musicProc = tmpProc;
     tmpProc.on('close', (code) => {
       console.log(`Exited song process with code ${code}`)
-      this.musicProc = null;
     });
   }
 
   async handleAction(topic, msg) {
     const payload = JSON.parse(msg.toString());
-    if (payload["deviceId"] === this.bulbState["super"]["deviceId"]) {
+    if (payload["deviceId"] === this.musicState["super"]["deviceId"]) {
       console.log(
         `Received a message on topic ${topic} for ${payload["deviceId"]}`
       );
 
       if ("setSong" in payload) {
-        await this.playSong(payload["setSong"])
-          .catch(err => {
+        await this.playSong(payload["setSong"]).catch(err => {
             console.error(err.message);
             generateErrorQRCode(`Could not play song on ${deviceName}`);
         })
       } else if ("setIndex" in payload) {
-        await this.playSong(this.songList[payload["setIndex"]])
-          .catch(err => {
+        await this.playSong(this.songList[payload["setIndex"]]).catch(err => {
             console.error(err.message);
             generateErrorQRCode(`Could not play song on ${deviceName}`);
           });
@@ -112,20 +106,10 @@ class MusicManager {
   }
 }
 
-async function pollStatus(bulbManager) {
-  setTimeout(async () => {
-    bulbManager.updateState();
-    pollStatus(bulbManager);
-  }, 10000);
-}
-
-async function playMusic(musicManager) {
+async function pollStatus(musicManager) {
   setTimeout(async () => {
     musicManager.updateState();
-    if (musicManager.songEnd()) {
-      musicManager.playNext();
-    }
-    playMusic(musicManager);
+    pollStatus(musicManager);
   }, 10000);
 }
 
@@ -164,10 +148,10 @@ function convertState(musicState, musicDeviceState) {
     currentSong = musicState.currentSong,
     super: {
       status: "ok", // TODO: don't hardcode
-      deviceId: lifxState.label,
+      deviceId: musicState.label,
       deviceType: "light",
-      location: lifxDeviceInfo.location.label,
-      group: [lifxDeviceInfo.group.label]
+      location: musicDeviceState.location.label,
+      group: [musicDeviceState.group.label]
     }
   };
 }
