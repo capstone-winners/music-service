@@ -8,7 +8,7 @@ const {
 
 async function main() {
   const musicManager = await new MusicManager(['song0.mp3', 'song1.mp3', 'song2.mp3']);
-  console.debug(JSON.stringify(bulbManager.bulbState));
+  console.debug(JSON.stringify(musicManager.musicState));
 
   pollStatus(musicManager);
 }
