@@ -65,19 +65,25 @@ class MusicManager {
     }
   }
 
-  async playSong(songName) {
-    var parsedIndex = parseInt(songName);
-    if (this.songList.includes(songName)) {
+  async playSong() {
+    //var parsedIndex = parseInt(songName);
+    if (parsedIndex >= this.nSongs) {
       songToPlay = songName;
-    } else if (parsedIndex != NaN && parsedIndex < this.nSongs) {
-      songToPlay = this.songList[parsedIndex];
+    } else if (parsedIndex < this.nSongs) {
+      songToPlay = this.songList[this.songIndex];
     } else {
-      console.log(`Given song name or index: ${songName} is not valid`);
+      console.log(`Something went wrong when trying to play song.`);
     }
     tmpProc = spawn('omxplayer', [pathJoin([songDir, songToPlay], '/')]);
     tmpProc.on('close', (code) => {
-      console.log(`Exited song process with code ${code}`)
+      console.log(`Exited song process with code ${code}`);
+      this.playing = false;
     });
+  }
+
+  async skipSong() {
+    this.songIndex += 1;
+    this.playSong();
   }
 
   async handleAction(topic, msg) {
@@ -87,6 +93,7 @@ class MusicManager {
         `Received a message on topic ${topic} for ${payload["deviceId"]}`
       );
 
+      /*
       if ("setSong" in payload) {
         await this.playSong(payload["setSong"]).catch(err => {
             console.error(err.message);
@@ -97,6 +104,22 @@ class MusicManager {
             console.error(err.message);
             generateErrorQRCode(`Could not play song on ${deviceName}`);
           });
+      }
+      */
+      if ("play" in payload) {
+        if (payload["play"] == true) {
+          await this.playSong().catch(err => {
+            console.error(err.message);
+            generateErrorQRCode(`Could not play song on ${deviceName}`);
+          })
+        }
+      } else if ("skip" in payload) {
+        if (payload["skip"] == true) {
+          await this.skipSong().catch(err => {
+            console.error(err.message);
+            generateErrorQRCode(`Could not skip song on ${deviceName}`);
+          })
+        }
       }
 
       // the state has changed, so update the state and generate a new QR code
